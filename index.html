@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TANCO 운영 현황 대시보드 2026</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    /* ══════════════════════════════════════
+       TANCO Dashboard — Warm Beige Theme
+       Inspired by Claude's warm interface
+    ══════════════════════════════════════ */
+    :root {
+      /* Beige palette */
+      --bg:        #f5f0e8;
+      --bg2:       #ede7db;
+      --surface:   #ffffff;
+      --surface2:  #faf7f2;
+      --border:    #ddd7cd;
+      --border2:   #e8e2d8;
+
+      /* Typography */
+      --text:      #1c1917;
+      --text-2:    #44403c;
+      --text-3:    #78716c;
+      --text-4:    #a8a29e;
+
+      /* Brand accents */
+      --amber:     #d97706;
+      --amber-bg:  #fef3c7;
+      --amber-lt:  #fffbeb;
+      --teal:      #0d9488;
+      --teal-bg:   #f0fdfa;
+      --rose:      #e11d48;
+      --rose-bg:   #fff1f2;
+      --purple:    #7c3aed;
+      --purple-bg: #f5f3ff;
+      --green:     #059669;
+      --green-bg:  #ecfdf5;
+      --blue:      #1d4ed8;
+      --blue-bg:   #eff6ff;
+      --orange:    #ea580c;
+
+      --radius-sm: 8px;
+      --radius:    14px;
+      --radius-lg: 20px;
+      --shadow:    0 1px 4px rgba(28,25,23,0.07), 0 1px 2px rgba(28,25,23,0.04);
+      --shadow-md: 0 4px 16px rgba(28,25,23,0.10), 0 1px 4px rgba(28,25,23,0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ─── NOTICE BANNER ─── */
+    .notice-bar {
+      background: #fef9ee;
+      border-bottom: 1px solid #fde68a;
+      padding: 8px 40px;
+      font-size: 12px;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 40px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: var(--shadow);
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-mark {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 900;
+      color: white;
+      letter-spacing: -1px;
+      box-shadow: 0 2px 8px rgba(217,119,6,0.3);
+      flex-shrink: 0;
+    }
+    .header-title { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); }
+    .header-sub   { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+    .header-meta  { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: var(--text-3);
+      font-weight: 500;
+    }
+    .pill.amber { background: var(--amber-bg); border-color: #fcd34d; color: #92400e; }
+    .pill-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    /* ─── LAYOUT ─── */
+    .main { padding: 28px 40px 64px; max-width: 1440px; margin: 0 auto; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      margin-top: 32px;
+    }
+    .section-header:first-child { margin-top: 0; }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .card-header {
+      padding: 16px 20px 0;
+      font-size: 12px;
+      color: var(--text-3);
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+    .card-body { padding: 16px 20px 20px; }
+
+    /* ─── KPI GRID ─── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    @media (max-width:960px) { .kpi-grid { grid-template-columns: repeat(2,1fr); } }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px 16px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .kpi-amber::before  { background: linear-gradient(90deg,#d97706,#f59e0b); }
+    .kpi-teal::before   { background: linear-gradient(90deg,#0d9488,#14b8a6); }
+    .kpi-rose::before   { background: linear-gradient(90deg,#e11d48,#fb7185); }
+    .kpi-purple::before { background: linear-gradient(90deg,#7c3aed,#a78bfa); }
+
+    .kpi-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      margin-bottom: 10px;
+    }
+    .kpi-label { font-size: 11px; color: var(--text-3); font-weight: 500; margin-bottom: 6px; }
+    .kpi-val   { font-size: 26px; font-weight: 800; letter-spacing: -1px; line-height: 1; color: var(--text); }
+    .kpi-unit  { font-size: 13px; font-weight: 500; color: var(--text-3); margin-left: 2px; }
+    .kpi-sub   { margin-top: 7px; font-size: 11px; color: var(--text-4); }
+    .up   { color: var(--green); font-weight: 600; }
+    .down { color: var(--rose); font-weight: 600; }
+
+    /* ─── TWO-COL ─── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width:900px) { .two-col { grid-template-columns:1fr; } }
+
+    /* ─── SCENARIO PROGRESS ─── */
+    .sc-block { padding: 13px 0; border-bottom: 1px solid var(--border2); }
+    .sc-block:last-of-type { border-bottom: none; }
+    .sc-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 7px;
+    }
+    .sc-name { font-size: 13px; font-weight: 700; }
+    .sc-nums { font-size: 11px; color: var(--text-3); }
+    .sc-nums strong { color: var(--text-2); font-weight: 600; }
+    .track {
+      height: 7px;
+      background: var(--bg);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1.2s cubic-bezier(.4,0,.2,1);
+    }
+    .sc-foot { font-size: 10.5px; color: var(--text-4); margin-top: 4px; text-align: right; }
+
+    .info-rows { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border2); }
+    .info-row  {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      font-size: 12px;
+    }
+    .info-row .lbl { color: var(--text-3); }
+    .info-row .val { font-weight: 700; }
+
+    /* ─── CHART ─── */
+    .chart-wrap { height: 190px; position: relative; }
+
+    /* ─── THREE-COL ─── */
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 14px;
+    }
+    @media (max-width:900px) { .three-col { grid-template-columns:1fr; } }
+
+    /* ─── PRODUCT TABLE ─── */
+    .prod-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .prod-table thead th {
+      padding: 8px 14px;
+      font-size: 10.5px;
+      color: var(--text-4);
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      text-align: left;
+    }
+    .prod-table thead th:not(:first-child) { text-align: right; }
+    .prod-table tbody td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border2);
+      vertical-align: middle;
+    }
+    .prod-table tbody td:not(:first-child) { text-align: right; }
+    .prod-table tbody tr:last-child td { border-bottom: none; }
+    .prod-table tbody tr:hover td { background: var(--surface2); }
+    .p-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 7px;
+      flex-shrink: 0;
+    }
+    .p-name { font-weight: 600; color: var(--text); }
+    .bar-cell { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+    .bar-cell .b {
+      height: 4px;
+      border-radius: 2px;
+      min-width: 2px;
+    }
+    .pct-tag {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--surface2);
+      color: var(--text-2);
+      min-width: 42px;
+      text-align: right;
+    }
+
+    /* ─── DONUT ─── */
+    .donut-wrap {
+      height: 190px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .donut-center {
+      position: absolute;
+      text-align: center;
+      pointer-events: none;
+    }
+    .donut-center .dv { font-size: 19px; font-weight: 800; color: var(--text); }
+    .donut-center .dl { font-size: 10px; color: var(--text-4); margin-top: 2px; }
+
+    /* ─── LEGEND ─── */
+    .legend-list { display: flex; flex-direction: column; gap: 6px; }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+    }
+    .legend-item:first-child { border-color: #fcd34d; background: #fffbeb; }
+    .legend-item:nth-child(2){ border-color: #99f6e4; background: #f0fdfa; }
+    .legend-item:nth-child(3){ border-color: #ddd6fe; background: #f5f3ff; }
+    .l-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink:0; }
+    .l-info { flex: 1; }
+    .l-name { font-size: 12px; font-weight: 600; color: var(--text); }
+    .l-note { font-size: 10.5px; color: var(--text-4); }
+    .l-pct  { font-size: 14px; font-weight: 800; }
+
+    /* ─── ROADMAP ─── */
+    .rm-list { display: flex; flex-direction: column; gap: 0; }
+    .rm-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 10px 0;
+    }
+    .rm-col { display: flex; flex-direction: column; align-items: center; padding-top: 2px; width:14px; flex-shrink:0; }
+    .rm-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+    .rm-line { width:2px; flex:1; background:var(--border); min-height:18px; margin-top:3px; }
+    .rm-item:last-child .rm-line { display:none; }
+    .rm-body { flex:1; }
+    .rm-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+    .b-done     { background:#dcfce7; color:#166534; }
+    .b-ongoing  { background:#fef9c3; color:#854d0e; }
+    .b-planned  { background:#f3f4f6; color:#6b7280; }
+    .b-critical { background:#ffe4e6; color:#be123c; }
+    .rm-title { font-size: 12.5px; font-weight: 600; line-height: 1.4; color: var(--text); }
+    .rm-meta  { font-size: 11px; color: var(--text-4); margin-top: 2px; }
+
+    /* ─── KPI METRICS ─── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 12px;
+    }
+    @media (max-width:900px) { .metrics-grid { grid-template-columns: 1fr; } }
+
+    .metric-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+    }
+    .metric-label { font-size: 11px; color: var(--text-4); margin-bottom: 6px; font-weight:500; }
+    .metric-val   { font-size: 21px; font-weight: 800; letter-spacing: -0.5px; }
+    .metric-desc  { font-size: 11px; color: var(--text-4); margin-top: 5px; line-height: 1.55; }
+
+    /* ─── RISK BOXES ─── */
+    .risk-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+    @media (max-width:900px) { .risk-grid { grid-template-columns: 1fr; } }
+    .risk-box {
+      border-radius: var(--radius-sm);
+      padding: 13px 15px;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .r-title { font-weight: 700; font-size: 12.5px; margin-bottom: 5px; }
+    .risk-red    { background:#fff1f2; border:1px solid #fecdd3; }
+    .risk-red .r-title    { color:#be123c; }
+    .risk-amber  { background:#fffbeb; border:1px solid #fde68a; }
+    .risk-amber .r-title  { color:#92400e; }
+    .risk-blue   { background:#eff6ff; border:1px solid #bfdbfe; }
+    .risk-blue .r-title   { color:#1e40af; }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      text-align: center;
+      padding: 28px 40px;
+      font-size: 11px;
+      color: var(--text-4);
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      margin-top: 8px;
+    }
+
+    /* ─── DIVIDER TAG ─── */
+    .divider-tag {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 10.5px;
+      color: var(--text-4);
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin: 28px 0 14px;
+    }
+    .divider-tag::before, .divider-tag::after {
+      content:''; flex:1; height:1px; background:var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Notice -->
+<div class="notice-bar">
+  ⚠ 내부 공유 전용 · GitHub Pages URL을 팀원에게만 공유하세요. URL을 아는 누구나 열람 가능합니다.
+</div>
+
+<!-- ════ HEADER ════ -->
+<header class="header">
+  <div class="header-brand">
+    <div class="logo-mark">TC</div>
+    <div>
+      <div class="header-title">TANCO 운영 현황 대시보드</div>
+      <div class="header-sub">주식회사 탠코 · 헤어테크 소셜벤처 · 기준일: 2026-05-19</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div class="pill"><div class="pill-dot"></div>Live</div>
+    <div class="pill amber">2026 FY</div>
+    <div class="pill">내부 공유용</div>
+    <div class="pill">설립 2024.08</div>
+  </div>
+</header>
+
+<!-- ════ MAIN ════ -->
+<div class="main">
+
+  <!-- ── KPI ── -->
+  <div class="section-header">
+    <div class="section-label">핵심 지표 · 2026 누적</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="kpi-grid" style="margin-bottom:24px;">
+    <div class="kpi-card kpi-amber">
+      <div class="kpi-icon" style="background:#fef3c7;">💰</div>
+      <div class="kpi-label">2026 누적 매출 (5/19 기준)</div>
+      <div class="kpi-val">1,601<span class="kpi-unit">만원</span></div>
+      <div class="kpi-sub">Q1 1,227만 + Q2 현재 375만</div>
+    </div>
+    <div class="kpi-card kpi-teal">
+      <div class="kpi-icon" style="background:#f0fdfa;">📈</div>
+      <div class="kpi-label">Q1 2026 총 매출</div>
+      <div class="kpi-val">1,227<span class="kpi-unit">만원</span></div>
+      <div class="kpi-sub">1월 305 · 2월 139 · 3월 783만원</div>
+    </div>
+    <div class="kpi-card kpi-rose">
+      <div class="kpi-icon" style="background:#fff1f2;">🌸</div>
+      <div class="kpi-label">Q2 현재 매출 (4/1~5/18)</div>
+      <div class="kpi-val">375<span class="kpi-unit">만원</span></div>
+      <div class="kpi-sub">4월 135 · 5월(1~18일) 240만원</div>
+    </div>
+    <div class="kpi-card kpi-purple">
+      <div class="kpi-icon" style="background:#f5f3ff;">🚀</div>
+      <div class="kpi-label">2025 연간 매출 (전년도)</div>
+      <div class="kpi-val">~2,500<span class="kpi-unit">만원</span></div>
+      <div class="kpi-sub"><span class="up">▲ 317%</span> YoY 성장 (2024: 600만원)</div>
+    </div>
+  </div>
+
+  <!-- ── 매출 목표 달성 ── -->
+  <div class="section-header">
+    <div class="section-label">2026 연매출 목표 달성 현황</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:24px;">
+
+    <!-- 시나리오 -->
+    <div class="card">
+      <div class="card-header">시나리오별 목표 달성률</div>
+      <div class="card-body">
+
+        <div class="sc-block">
+          <div class="sc-top">
+            <span class="sc-name" style="color:var(--teal)">보수적 시나리오</span>
+            <span class="sc-nums">누적 <strong>1,601만</strong> / 목표 3억원</span>
+          </div>
+          <div class="track">
+            <div class="fill" style="width:5.3%; background:linear-gradient(90deg,#0d9488,#14b8a6);"></div>
+          </div>
+          <div class="sc-foot">5.3% 달성 &nbsp;·&nbsp; 잔여 2억 8,399만원 &nbsp;·&nbsp; 월 4,040만원 필요</div>
+        </div>
+
+        <div class="sc-block">
+          <div class="sc-top">
+            <span class="sc-name" style="color:var(--amber)">현실적 시나리오</span>
+            <span class="sc-nums">누적 <strong>1,601만</strong> / 목표 6억원</span>
+          </div>
+          <div class="track">
+            <div class="fill" style="width:2.7%; background:linear-gradient(90deg,#d97706,#f59e0b);"></div>
+          </div>
+          <div class="sc-foot">2.7% 달성 &nbsp;·&nbsp; 잔여 5억 8,399만원 &nbsp;·&nbsp; 월 8,115만원 필요</div>
+        </div>
+
+        <div class="sc-block">
+          <div class="sc-top">
+            <span class="sc-name" style="color:var(--rose)">공격적 시나리오</span>
+            <span class="sc-nums">누적 <strong>1,601만</strong> / 목표 10억원</span>
+          </div>
+          <div class="track">
+            <div class="fill" style="width:1.6%; background:linear-gradient(90deg,#e11d48,#fb7185);"></div>
+          </div>
+          <div class="sc-foot">1.6% 달성 &nbsp;·&nbsp; 잔여 9억 8,399만원 &nbsp;·&nbsp; 월 1억 3,570만원 필요</div>
+        </div>
+
+        <div class="info-rows">
+          <div class="info-row">
+            <span class="lbl">📅 잔여 기간</span>
+            <span class="val">2026.05.19 ~ 12.31 &nbsp;(약 7.4개월)</span>
+          </div>
+          <div class="info-row">
+            <span class="lbl">🎯 5년 로드맵 목표</span>
+            <span class="val" style="color:var(--amber)">2.5 → 5 → 10 → 25 → 50억원</span>
+          </div>
+          <div class="info-row">
+            <span class="lbl">🏦 확보 운영 자금</span>
+            <span class="val" style="color:var(--teal)">중진공 대출 1억 5천만원</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 월별 차트 -->
+    <div class="card">
+      <div class="card-header">월별 매출 추이 (2026년 1~5월)</div>
+      <div class="card-body">
+        <div class="chart-wrap">
+          <canvas id="monthlyChart"></canvas>
+        </div>
+        <div style="margin-top:14px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div style="background:var(--surface2); border:1px solid var(--border2); border-radius:8px; padding:10px 12px;">
+            <div style="font-size:10px; color:var(--text-4); margin-bottom:3px;">최고 월매출</div>
+            <div style="font-size:16px; font-weight:800; color:var(--amber)">783만원</div>
+            <div style="font-size:10px; color:var(--text-4);">3월 (맞춤가발 집중)</div>
+          </div>
+          <div style="background:var(--surface2); border:1px solid var(--border2); border-radius:8px; padding:10px 12px;">
+            <div style="font-size:10px; color:var(--text-4); margin-bottom:3px;">월평균 매출</div>
+            <div style="font-size:16px; font-weight:800; color:var(--teal)">320만원</div>
+            <div style="font-size:10px; color:var(--text-4);">1~5월 18일 기준</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 제품별 판매 ── -->
+  <div class="section-header">
+    <div class="section-label">제품별 판매 현황 · 공격적 시나리오 잔여기간 목표</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:24px;">
+
+    <!-- 테이블 -->
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div style="padding:14px 18px 10px; font-size:12px; color:var(--text-3);">
+        잔여기간(5/19~12/31) 공격적 목표 합계: <strong style="color:var(--text)">10억 682만원</strong>
+      </div>
+      <table class="prod-table">
+        <thead>
+          <tr>
+            <th>제품군</th>
+            <th>판매가</th>
+            <th>월 목표</th>
+            <th>잔여기간 목표</th>
+            <th>비중</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="p-dot" style="background:#d97706"></span><span class="p-name">맞춤 항암/탈모가발</span></td>
+            <td>200만원</td><td>25건</td><td>3억 7,097만</td>
+            <td><div class="bar-cell"><div class="b" style="width:52px;background:#d97706;"></div><span class="pct-tag">36.8%</span></div></td>
+          </tr>
+          <tr>
+            <td><span class="p-dot" style="background:#0d9488"></span><span class="p-name">항암 모자가발</span></td>
+            <td>30만원</td><td>160개</td><td>3억 5,613만</td>
+            <td><div class="bar-cell"><div class="b" style="width:50px;background:#0d9488;"></div><span class="pct-tag">35.4%</span></div></td>
+          </tr>
+          <tr>
+            <td><span class="p-dot" style="background:#7c3aed"></span><span class="p-name">맞춤 항암 모자가발</span></td>
+            <td>50만원</td><td>50건</td><td>1억 8,548만</td>
+            <td><div class="bar-cell"><div class="b" style="width:26px;background:#7c3aed;"></div><span class="pct-tag">18.4%</span></div></td>
+          </tr>
+          <tr>
+            <td><span class="p-dot" style="background:#1d4ed8"></span><span class="p-name">B2B 납품 (병원·살롱)</span></td>
+            <td>3만원</td><td>250건</td><td>5,565만</td>
+            <td><div class="bar-cell"><div class="b" style="width:8px;background:#1d4ed8;"></div><span class="pct-tag">5.5%</span></div></td>
+          </tr>
+          <tr>
+            <td><span class="p-dot" style="background:#ea580c"></span><span class="p-name">가발스탠드</span></td>
+            <td>3만원</td><td>80개</td><td>1,781만</td>
+            <td><div class="bar-cell"><div class="b" style="width:3px;background:#ea580c;"></div><span class="pct-tag">1.8%</span></div></td>
+          </tr>
+          <tr>
+            <td><span class="p-dot" style="background:#e11d48"></span><span class="p-name">가발테이프</span></td>
+            <td>5,000원</td><td>300개</td><td>1,113만</td>
+            <td><div class="bar-cell"><div class="b" style="width:2px;background:#e11d48;"></div><span class="pct-tag">1.1%</span></div></td>
+          </tr>
+          <tr>
+            <td><span class="p-dot" style="background:#a8a29e"></span><span class="p-name">가발망 · 클립류</span></td>
+            <td>1~2천원</td><td>1,050개</td><td>965만</td>
+            <td><div class="bar-cell"><div class="b" style="width:2px;background:#a8a29e;"></div><span class="pct-tag">1.0%</span></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="padding:10px 18px; background:var(--surface2); border-top:1px solid var(--border); font-size:11px; color:var(--text-4);">
+        ※ 공격적 목표는 1인 운영 체제에서 물리적 한계 — 디지털 작업지시서·위임 구조 구축이 선결 과제
+      </div>
+    </div>
+
+    <!-- 도넛 + 집중 TOP3 -->
+    <div class="card">
+      <div class="card-header">매출 구성 비중</div>
+      <div class="card-body">
+        <div class="donut-wrap">
+          <canvas id="donutChart"></canvas>
+          <div class="donut-center">
+            <div class="dv">10억</div>
+            <div class="dl">공격적 목표</div>
+          </div>
+        </div>
+        <div class="divider-tag">집중 TOP 3</div>
+        <div class="legend-list">
+          <div class="legend-item">
+            <div class="l-dot" style="background:#d97706;"></div>
+            <div class="l-info">
+              <div class="l-name">맞춤 항암/탈모가발</div>
+              <div class="l-note">고마진 핵심 · 헤어테크 가치 입증</div>
+            </div>
+            <div class="l-pct" style="color:#d97706">36.8%</div>
+          </div>
+          <div class="legend-item">
+            <div class="l-dot" style="background:#0d9488;"></div>
+            <div class="l-info">
+              <div class="l-name">항암 모자가발</div>
+              <div class="l-note">6월 초 상세페이지 완성 후 즉시 판매</div>
+            </div>
+            <div class="l-pct" style="color:#0d9488">35.4%</div>
+          </div>
+          <div class="legend-item">
+            <div class="l-dot" style="background:#7c3aed;"></div>
+            <div class="l-info">
+              <div class="l-name">맞춤 항암 모자가발</div>
+              <div class="l-note">고객 맞춤 상담 채널 유입 강화</div>
+            </div>
+            <div class="l-pct" style="color:#7c3aed">18.4%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 로드맵 ── -->
+  <div class="section-header">
+    <div class="section-label">2026 사업 로드맵 &amp; 마일스톤</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="three-col" style="margin-bottom:24px;">
+
+    <!-- Q2 -->
+    <div class="card">
+      <div class="card-header" style="padding-bottom:6px;">
+        Q2 2026 &nbsp;<span style="color:var(--amber);font-weight:700;">진행 중</span>
+      </div>
+      <div class="card-body" style="padding-top:10px;">
+        <div class="rm-list">
+          <div class="rm-item">
+            <div class="rm-col"><div class="rm-dot" style="background:#059669;"></div><div class="rm-line"></div></div>
+            <div class="rm-body">
+              <div class="rm-badge b-done">완료</div>
+              <div class="rm-title">중진공 대출 1.5억 확보</div>
+              <div class="rm-meta">운영 자금 확보 완료</div>
+            </div>
+          </div>
+          <div class="rm-item">
+            <div class="rm-col"><div class="rm-dot" style="background:#059669;"></div><div class="rm-line"></div></div>
+            <div class="rm-body">
+              <div class="rm-badge b-done">완료</div>
+              <div class="rm-title">소셜임팩트 우수기업 지원 제출</div>
+              <div class="rm-meta">발표 인터뷰 대기 중</div>
+            </div>
+          </div>
+          <div class="rm-item">
+            <div class="rm-col"><div class="rm-dot" style="background:#d97706;"></div><div class="rm-line"></div></div>
+            <div class="rm-body">
+              <div class="rm-badge b-ongoing">진행중</div>
+              <div class="rm-title">항암 모자가발 상세페이지 완성</div>
+              <div class="rm-meta">6월 초 즉시 판매 목표</div>
+            </div>
+          </div>
+          <div class="rm-item">
+            <div class="rm-col"><div class="rm-dot" style="background:#d97706;"></div><div class="rm-line"></div></div>
+            <div class="rm-body">
+              <div class="rm-badge b-ongoing">진행중</div>
+              <div class="rm-title">행복나래 SE컨설턴트 멘토링</div>
+              <div class="rm-meta">6번 멘토 (SK매직 출신) 선정</div>
+            </div>
+          </div>
+          <div class="rm-item">
+            <div class="rm-col"><div class="rm-dot" style="background:#d1d5db;"></div></div>
+            <div class="rm-body">
+              <div class="rm-badge b-planned">예정</div>
+              <div class="rm-title">1인 헤어샵 파트너 본격화</div>
+              <div class="rm-meta">히든모 2,500개 살롱 네트워크</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="card">
+      <div class="card-header" style="padding-bottom:6px;">
+        Q3 2026 &nbsp;<span style="color:var(--text-4);">하반기 준비</span>
+      </div>
+      <div class="card-body" style="padding-top:10px;">
+        <div class="rm-list">
+          <div class="rm-item">
+            <div class="rm-col"><div class="rm-dot" style="background:#d1d5db;"></div><div class="rm-line"></div></div>
+            <div class="rm-body">
+              <div class="rm-badge b-planned">예정</div>
+              <div class="rm-title">디지털 작업지시서 시스템 구축</div>
+              <div class="rm-meta">파트너사 위임 구조 마련</div>
+            </div>
+          </div>
+          <div class="rm-item">
+            <div class="rm-col"><div class="rm-dot" style="background:#d1d5db;"></div><div class="rm-line"></div></div>
+            <div class="rm-body">
+              <div class="rm-badge b-planned">예정</div>
+              <div class="rm-title">가발스탠드 국내 양산 (3,000개)</div>
+              <div class="rm-meta">스마트스토어·인스타그램 판매</div>
+            </div>
+          </div>
+          <div class="rm-item">
+            <div class="rm-col"><div class="rm-dot" style="background:#d1d5db;"></div><div class="rm-line"></div></div>
+            <div class="rm-body">
+              <div class="rm-badge b-planned">예정</div>
+              <div class="rm-title">B2B 병원·지자체 납품 계약</div>
+              <div class="rm-meta">삼성서울병원 조주희 교수 채널</div>
+            </div>
+          </div>
+          <div class="rm-item">
+            <div class="rm-col"><div class="rm-dot" style="background:#e11d48;"></div></div>
+            <div class="rm-body">
+              <div class="rm-badge b-critical">중요</div>
+              <div class="rm-title">AI 모발 선별 자동화 로드맵</div>
+              <div class="rm-meta">컨베이어 + 광학센서 시스템 검토</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q4 & 글로벌 -->
+    <div class="card">
+      <div class="card-header" style="padding-bottom:6px;">
+        Q4 2026 &amp; 글로벌 확장
+      </div>
+      <div class="card-body" style="padding-top:10px;">
+        <div class="rm-list">
+          <div class="rm-item">
+            <div class="rm-col"><div class="rm-dot" style="background:#d1d5db;"></div><div class="rm-line"></div></div>
+            <div class="rm-body">
+              <div class="rm-badge b-planned">예정</div>
+              <div class="rm-title">댄앤나우 법인 분리</div>
+              <div class="rm-meta">사회적기업 인증 별도 법인화</div>
+            </div>
+          </div>
+          <div class="rm-item">
+            <div class="rm-col"><div class="rm-dot" style="background:#d1d5db;"></div><div class="rm-line"></div></div>
+            <div class="rm-body">
+              <div class="rm-badge b-planned">예정</div>
+              <div class="rm-title">일본 진출 — Rakuten + B2B</div>
+              <div class="rm-meta">2026~2027 · Cowell Investment 협력</div>
+            </div>
+          </div>
+          <div class="rm-item">
+            <div class="rm-col"><div class="rm-dot" style="background:#d1d5db;"></div><div class="rm-line"></div></div>
+            <div class="rm-body">
+              <div class="rm-badge b-planned">예정</div>
+              <div class="rm-title">미국 진출 — Amazon + B2B</div>
+              <div class="rm-meta">2027~2028 · 해외 상표권 3개국</div>
+            </div>
+          </div>
+          <div class="rm-item">
+            <div class="rm-col"><div class="rm-dot" style="background:#d1d5db;"></div></div>
+            <div class="rm-body">
+              <div class="rm-badge b-planned">예정</div>
+              <div class="rm-title">연매출 5억 달성 &amp; IR 준비</div>
+              <div class="rm-meta">투자유치 트랙 본격화</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 운영 KPI ── -->
+  <div class="section-header">
+    <div class="section-label">운영 KPI 지표</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px;">
+    <div class="card-body">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">현실적 목표 필요 월매출</div>
+          <div class="metric-val" style="color:var(--amber)">8,115만원</div>
+          <div class="metric-desc">맞춤가발 15건 + 모자가발 100개 + 맞춤모자 30건 기준</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">공격적 목표 필요 월매출</div>
+          <div class="metric-val" style="color:var(--rose)">1억 3,570만원</div>
+          <div class="metric-desc">1인 운영 물리적 한계 — 위임 구조 없이 불가</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">맞춤 항암/탈모가발 마진율</div>
+          <div class="metric-val" style="color:var(--green)">75~78%</div>
+          <div class="metric-desc">피팅 수정 증가 시 수익성 저하 리스크 관리 필요</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">항암 모자가발 마진율</div>
+          <div class="metric-val" style="color:var(--teal)">78.1%</div>
+          <div class="metric-desc">시스템화 용이 · 물량 급증 시 양산 자금 확보 필요</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">히든모 파트너 살롱 네트워크</div>
+          <div class="metric-val" style="color:var(--purple)">~2,500개</div>
+          <div class="metric-desc">전국 1인 헤어샵 파트너 프로그램 연계 규모</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">보유 인증 / 지재권</div>
+          <div class="metric-val" style="color:var(--blue)">6종</div>
+          <div class="metric-desc">소셜벤처·예비사회적기업·여성기업·특허 2건·해외상표 3개국</div>
+        </div>
+      </div>
+
+      <!-- 리스크 -->
+      <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--border2);">
+        <div style="font-size:12px; color:var(--text-3); font-weight:700; margin-bottom:10px;">⚠ 핵심 리스크 &amp; 병목</div>
+        <div class="risk-grid">
+          <div class="risk-box risk-red">
+            <div class="r-title">수기 제작 한계</div>
+            대표 1인 체제에서 맞춤가발 월 75건 처리 물리적 불가 → 디지털 작업지시서 + 파트너사 위임 구조 즉시 구축 필요
+          </div>
+          <div class="risk-box risk-amber">
+            <div class="r-title">저단가 제품 역설</div>
+            가발망(1천원)·테이프(5천원) 대량 판매 시 물류비 역설 발생 → CS·포장 행정 소모 과다, 묶음 판매 전략 필수
+          </div>
+          <div class="risk-box risk-blue">
+            <div class="r-title">양산 자금 부족</div>
+            모자가발 주문 급증 시 재고 선투자 자금 부족 리스크 → 중진공 대출 자금의 전략적 배분 계획 수립 필요
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- Footer -->
+<footer class="footer">
+  TANCO 운영 현황 대시보드 &nbsp;·&nbsp; 내부 공유 전용 &nbsp;·&nbsp; 데이터 기준일: 2026-05-19<br/>
+  <span style="opacity:.6;">업데이트: index.html을 텍스트 편집기로 수정 후 GitHub 저장소에 재업로드하세요.</span>
+</footer>
+
+<!-- ════ CHARTS ════ -->
+<script>
+Chart.defaults.font.family = "'Apple SD Gothic Neo','Noto Sans KR',sans-serif";
+
+/* Monthly Bar Chart */
+const ctx1 = document.getElementById('monthlyChart').getContext('2d');
+new Chart(ctx1, {
+  type: 'bar',
+  data: {
+    labels: ['1월','2월','3월','4월','5월\n(~18일)'],
+    datasets: [{
+      label: '매출 (만원)',
+      data: [304.9, 138.6, 783.3, 134.5, 240.3],
+      backgroundColor: [
+        'rgba(217,119,6,0.65)',
+        'rgba(217,119,6,0.35)',
+        'rgba(217,119,6,0.90)',
+        'rgba(13,148,136,0.45)',
+        'rgba(13,148,136,0.75)',
+      ],
+      borderRadius: 6,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1c1917',
+        titleColor: '#e7e5e4',
+        bodyColor: '#fcd34d',
+        padding: 10,
+        callbacks: { label: c => `  ${c.parsed.y.toFixed(1)}만원` }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(221,215,205,0.5)' },
+        ticks: { color: '#a8a29e', font: { size: 11 } }
+      },
+      y: {
+        grid: { color: 'rgba(221,215,205,0.5)' },
+        ticks: { color: '#a8a29e', font: { size: 10 }, callback: v => v + '만' },
+        beginAtZero: true
+      }
+    }
+  }
+});
+
+/* Donut Chart */
+const ctx2 = document.getElementById('donutChart').getContext('2d');
+new Chart(ctx2, {
+  type: 'doughnut',
+  data: {
+    labels: ['맞춤 항암/탈모가발','항암 모자가발','맞춤 항암 모자가발','B2B 납품','기타'],
+    datasets: [{
+      data: [36.8, 35.4, 18.4, 5.5, 3.9],
+      backgroundColor: [
+        'rgba(217,119,6,0.80)',
+        'rgba(13,148,136,0.80)',
+        'rgba(124,58,237,0.80)',
+        'rgba(29,78,216,0.80)',
+        'rgba(168,162,158,0.50)',
+      ],
+      borderColor: '#ffffff',
+      borderWidth: 3,
+      hoverOffset: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '68%',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1c1917',
+        titleColor: '#e7e5e4',
+        bodyColor: '#fcd34d',
+        padding: 10,
+        callbacks: { label: c => `  ${c.label}: ${c.parsed}%` }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
